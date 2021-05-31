@@ -22,7 +22,9 @@ const writeCsv = (path, data) => {
   const csv = new ObjectsToCsv(data);
   return csv.toDisk(path);
 };
-
+const deepClone = (object) => {
+  return JSON.parse(JSON.stringify(object));
+};
 const getPuppeteerBrowser = (headless) => {
   const headlessConfig = headless || false;
   const puppeteer = require("puppeteer-extra");
@@ -31,10 +33,12 @@ const getPuppeteerBrowser = (headless) => {
   const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
   puppeteer.use(AdblockerPlugin({ blockTrackers: true }));
   return puppeteer.launch({
+    userDataDir: "Profile",
     headless: headlessConfig,
     ignoreHTTPSErrors: true,
     slowMo: 0,
     args: [
+      "--lang=en-US,en",
       "--window-size=1400,900",
       "--remote-debugging-port=9222",
       "--remote-debugging-address=0.0.0.0", // You know what your doing?
@@ -60,4 +64,5 @@ module.exports = {
   getPuppeteerBrowser,
   getDomParser,
   sleep,
+  deepClone,
 };
