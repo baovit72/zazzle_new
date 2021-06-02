@@ -68,7 +68,11 @@ async function run() {
       await waitThenGetElement(".DesignPod-customizeControls>button", true)
     ).click();
     await (await waitThenGetElement("#uploadID-1", true)).uploadFile(img);
-    await waitThenGetElement(".Z4DSDesignView-canvasWrapper > div > img");
+    await waitThenGetElement(
+      ".Z4DSDesignView-canvasWrapper > div > img",
+      true,
+      300000
+    );
     await (
       await waitThenGetElement(
         ".Z4DSMenuBar_rightGroup > .Z4ColorButton--blue",
