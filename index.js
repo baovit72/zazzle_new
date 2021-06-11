@@ -1,5 +1,8 @@
 const axios = require("axios");
 const utils = require("./utils");
+const fs = require("fs");
+var path = require("path");
+
 async function run() {
   const browser = await utils.getPuppeteerBrowser();
   const page = await browser.newPage();
@@ -57,142 +60,169 @@ async function run() {
     gender,
     color
   ) {
-    await page.goto("https://www.zazzle.com/lgn/signin");
-    await waitThenGetElement(
-      ".Header2021RightContent_accountButton",
-      true,
-      600000
-    );
-    await page.goto(shirtUrls[gender][color]);
-    await (
-      await waitThenGetElement(".DesignPod-customizeControls>button", true)
-    ).click();
-    await (await waitThenGetElement("#uploadID-1", true)).uploadFile(img);
-    await waitThenGetElement(
-      ".Z4DSDesignView-canvasWrapper > div > img",
-      true,
-      300000
-    );
-    await (
+    const absImg = path.resolve("Images\\" + img);
+    if (!fs.existsSync(absImg)) return "IMAGE NOT EXIST";
+    try {
+      await page.goto("https://www.zazzle.com/lgn/signin");
       await waitThenGetElement(
-        ".Z4DSMenuBar_rightGroup > .Z4ColorButton--blue",
-        true
-      )
-    ).click();
-    await (
+        ".Header2021RightContent_accountButton",
+        true,
+        600000
+      );
+      await page.goto(shirtUrls[gender][color]);
+      await (
+        await waitThenGetElement(".DesignPod-customizeControls>button", true)
+      ).click();
+      await (await waitThenGetElement("#uploadID-1", true)).uploadFile(absImg);
       await waitThenGetElement(
-        ".DesignPod-customizeControls > .Tooltip button",
-        true
-      )
-    ).click();
-    await typeToInput(".PostForSalePage_titleInput input", title);
-    await typeToInput(
-      ".PostForSalePage_descriptionInput textarea",
-      description
-    );
-    await (
-      await waitThenGetElement(
-        ".SuggestedDepartmentSelector .RadioButton-inputWrapper",
-        true
-      )
-    ).click();
-    const categoryElems = await waitThenGetElement(
-      ".PostForSalePage_marginTop button"
-    );
-    const occasionElem = categoryElems[0];
-    await occasionElem.click();
-    for (let o of occasion.split(">")) {
+        ".Z4DSDesignView-canvasWrapper > div > img",
+        true,
+        300000
+      );
+      await (
+        await waitThenGetElement(
+          ".Z4DSMenuBar_rightGroup > .Z4ColorButton--blue",
+          true
+        )
+      ).click();
+      await (
+        await waitThenGetElement(
+          ".DesignPod-customizeControls > .Tooltip button",
+          true
+        )
+      ).click();
+      await typeToInput(".PostForSalePage_titleInput input", title);
+      await typeToInput(
+        ".PostForSalePage_descriptionInput textarea",
+        description
+      );
+      await (
+        await waitThenGetElement(
+          ".SuggestedDepartmentSelector .RadioButton-inputWrapper",
+          true
+        )
+      ).click();
+      const categoryElems = await waitThenGetElement(
+        ".PostForSalePage_marginTop button"
+      );
+      const occasionElem = categoryElems[0];
+      await occasionElem.click();
+      for (let o of occasion.split(">")) {
+        try {
+          await (
+            await waitThenGetElementXPath(
+              `//button[contains(text(), '${o.trim()}')]`,
+              true,
+              10000
+            )
+          ).click();
+        } catch (error) {
+          console.log(error);
+          break;
+        }
+      }
+      await (
+        await waitThenGetElement(".Dialog-footer .Button_root__Submit", true)
+      ).click();
+
+      const recipientElem = categoryElems[1];
+      await recipientElem.click();
+      for (let r of recipient.split(">")) {
+        try {
+          await (
+            await waitThenGetElementXPath(
+              `//button[contains(text(), '${r.trim()}')]`,
+              true,
+              10000
+            )
+          ).click();
+        } catch (error) {
+          console.log(error);
+          break;
+        }
+      }
+      await (
+        await waitThenGetElement(".Dialog-footer .Button_root__Submit", true)
+      ).click();
       try {
+        const categoryElem = categoryElems[2];
+        await categoryElem.click();
+        for (let c of category.split(">")) {
+          try {
+            await (
+              await waitThenGetElementXPath(
+                `//button[contains(text(), '${c.trim()}')]`,
+                true,
+                10000
+              )
+            ).click();
+          } catch (error) {
+            console.log(error);
+            break;
+          }
+        }
         await (
-          await waitThenGetElementXPath(
-            `//button[contains(text(), '${o.trim()}')]`,
-            true,
-            10000
-          )
+          await waitThenGetElement(".Dialog-footer .Button_root__Submit", true)
         ).click();
       } catch (error) {
         console.log(error);
-        break;
       }
+
+      await typeToInput(".TagInputList input", tags);
+      console.log("tag typing ", tags);
+      await (
+        await waitThenGetElement(
+          ".TagInputList .TagInputList-inputRow button",
+          true
+        )
+      ).click();
+
+      await (
+        await waitThenGetElement(
+          ".PostForSalePage_maturityList [value='1']",
+          true
+        )
+      ).click();
+      await (
+        await waitThenGetElement("#RoyaltyGrid_Percent_0", true)
+      ).click({ clickCount: 3 });
+      await typeToInput("#RoyaltyGrid_Percent_0", royalty.toString());
+      await (
+        await waitThenGetElement(
+          ".PostForSalePage_marginBottom  .Checkbox-prettyBox",
+          true
+        )
+      ).click();
+      await (
+        await waitThenGetElement(
+          ".PostForSalePage_submitButtonRow .Button_root__Submit",
+          true
+        )
+      ).click();
+      return "SUCCESS";
+    } catch (e) {
+      fs.appendFileSync("error.txt", e.toString());
+      return "NETWORK PROBLEM";
     }
-    await (
-      await waitThenGetElement(".Dialog-footer .Button_root__Submit", true)
-    ).click();
-
-    const recipientElem = categoryElems[1];
-    await recipientElem.click();
-    for (let r of recipient.split(">")) {
-      try {
-        await (
-          await waitThenGetElementXPath(
-            `//button[contains(text(), '${r.trim()}')]`,
-            true,
-            10000
-          )
-        ).click();
-      } catch (error) {
-        break;
-      }
-    }
-    await (
-      await waitThenGetElement(".Dialog-footer .Button_root__Submit", true)
-    ).click();
-
-    const categoryElem = categoryElems[2];
-    await categoryElem.click();
-    for (let c of category.split(">")) {
-      try {
-        await (
-          await waitThenGetElementXPath(
-            `//button[contains(text(), '${c.trim()}')]`,
-            true,
-            10000
-          )
-        ).click();
-      } catch (error) {
-        break;
-      }
-    }
-    await (
-      await waitThenGetElement(".Dialog-footer .Button_root__Submit", true)
-    ).click();
-
-    await typeToInput(".TagInputList input", tags);
-    await (
-      await waitThenGetElement(
-        ".TagInputList .TagInputList-inputRow button",
-        true
-      )
-    ).click();
-
-    await (
-      await waitThenGetElement(
-        ".PostForSalePage_maturityList [value='1']",
-        true
-      )
-    ).click();
-    await (
-      await waitThenGetElement("#RoyaltyGrid_Percent_0", true)
-    ).click({ clickCount: 3 });
-    await typeToInput("#RoyaltyGrid_Percent_0", royalty.toString());
-    await (
-      await waitThenGetElement(
-        ".PostForSalePage_marginBottom  .Checkbox-prettyBox",
-        true
-      )
-    ).click();
-    await (
-      await waitThenGetElement(
-        ".PostForSalePage_submitButtonRow .Button_root__Submit",
-        true
-      )
-    ).click();
   }
   const data_rows = utils.deepClone(await utils.readCsv("data.csv"));
 
   for (let r of data_rows) {
-    try {
-      await zazzle_execute(
+    let status = await zazzle_execute(
+      r.image,
+      r.title,
+      r.description,
+      r.occasion,
+      r.recipient,
+      r.category,
+      r.tag,
+      r.royalty,
+      r.gender,
+      r.color
+    );
+
+    if (status === "NETWORK PROBLEM") {
+      status = await zazzle_execute(
         r.image,
         r.title,
         r.description,
@@ -204,13 +234,10 @@ async function run() {
         r.gender,
         r.color
       );
-      r.done = "true";
-    } catch (error) {
-      r.done = "false";
     }
+    r.done = status;
+    await utils.writeCsv("output.csv", data_rows);
   }
-
-  await utils.writeCsv("output.csv", data_rows);
 }
 
 run();
